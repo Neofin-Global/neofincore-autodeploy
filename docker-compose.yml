@@ -47,9 +47,9 @@ services:
     networks:
       - nginx_network
 
-  certbot:
+  certbot-digitalocean:
     image: certbot/dns-digitalocean
-    container_name: certbot
+    container_name: certbot-digitalocean
     volumes:
       - certbot-www:/var/www/certbot/:rw
       - certbot-conf:/etc/letsencrypt/:rw
@@ -110,9 +110,7 @@ services:
   zabbix-agent:
     image: phonxis/neofincore_zabbix_master:latest
     container_name: zabbixagent
-    environment:
-      - ZBX_HOSTNAME=${ZABBIX_AGENT_HOSTNAME}
-      - ZBX_SERVER_HOST=${ZABBIX_SERVER_HOST}
+    env_file: .env
     pid: "host" # access and manipulate other containers
     privileged: true
     restart: always
