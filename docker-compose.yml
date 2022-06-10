@@ -1,0 +1,142 @@
+version: '3.8'
+services:
+  django:
+    image: phonxis/neofincore_django_master:latest
+    container_name: django
+    restart: always
+    volumes:
+      - nginx_conf:/nginx
+      - static:/staticfiles
+      - media:/media
+      - ./init.sh:/init.sh
+      - ./wait-for-it.sh:/wait-for-it.sh
+    entrypoint: ["/wait-for-it.sh","postgres:5432","--","/init.sh"]
+    networks:
+      - nginx_network
+      - djangonetwork
+    depends_on:
+      - postgres
+    links:
+      - postgres:postgres
+    env_file: .env
+
+  redis:
+    image: redis:6
+    container_name: redis
+    networks:
+      - djangonetwork
+
+  nginx:
+    image: phonxis/neofincore_nginx_master:latest
+    container_name: nginx
+    restart: always
+    expose:
+      - 80
+      - 443
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx:/etc/nginx/conf.d
+      - static:/static
+      - media:/media
+      - certbot-www:/var/www/certbot/:ro
+      - certbot-conf:/etc/nginx/ssl/:ro
+    depends_on:
+      - django
+    networks:
+      - nginx_network
+
+  certbot:
+    image: certbot/dns-digitalocean
+    container_name: certbot
+    volumes:
+      - certbot-www:/var/www/certbot/:rw
+      - certbot-conf:/etc/letsencrypt/:rw
+      - ./digitalocean.ini:/digitalocean.ini
+    command: certonly --dns-digitalocean --dns-digitalocean-credentials /digitalocean.ini -d ${DOMAIN} -d '*.${DOMAIN}'  --email ${DOMAIN_OWNER_EMAIL} --agree-tos
+    env_file: .env
+
+  postgres:
+    image: phonxis/neofincore_postgres_master:latest
+    container_name: postgresql
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - djangonetwork
+    env_file: .env
+
+  celeryworker:
+    image: phonxis/neofincore_celeryworker_master:latest
+    container_name: celeryworker
+    command: celery -A core.celery_app worker -l INFO
+    env_file: .env
+    depends_on:
+      - django
+      - redis
+    networks:
+      - djangonetwork
+
+  celerybeat:
+    image: phonxis/neofincore_celerybeat_master:latest
+    container_name: celerybeat
+    command: celery -A core.celery_app beat -l INFO
+    env_file: .env
+    depends_on:
+      - django
+      - redis
+    networks:
+      - djangonetwork
+
+  flower:
+    image: phonxis/neofincore_flower_master:latest
+    container_name: flower
+    command: >
+      sh -c "celery \
+             -A core.celery_app \
+             -b "${CELERY_BROKER_URL}" \
+             flower" \
+             --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
+    env_file: .env
+    depends_on:
+      - django
+      - redis
+    networks:
+      - djangonetwork
+
+  zabbix-agent:
+    image: phonxis/neofincore_zabbix_master:latest
+    container_name: zabbixagent
+    environment:
+      - ZBX_HOSTNAME=${ZABBIX_AGENT_HOSTNAME}
+      - ZBX_SERVER_HOST=${ZABBIX_SERVER_HOST}
+    pid: "host" # access and manipulate other containers
+    privileged: true
+    restart: always
+    expose:
+      - 10050
+    ports:
+      - 10050:10050
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    networks:
+      - djangonetwork
+
+volumes:
+  postgres_data:
+  nginx_conf:
+  static:
+  media:
+  certbot-www:
+  certbot-conf:
+
+networks:
+  nginx_network:
+    driver: bridge
+  djangonetwork:
+    driver: bridge

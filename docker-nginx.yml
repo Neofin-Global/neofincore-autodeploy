@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  nginx_default:
+    image: phonxis/neofincore_nginx_master:latest
+    container_name: nginx_default
+    expose:
+      - 80
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx_default:/etc/nginx/conf.d
+      - certbot-www:/var/www/certbot/:ro
+      - certbot-conf:/etc/nginx/ssl/:ro
+
+volumes:
+  certbot-www:
+  certbot-conf:
