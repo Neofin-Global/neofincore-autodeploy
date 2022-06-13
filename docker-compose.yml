@@ -47,15 +47,23 @@ services:
     networks:
       - nginx_network
 
-  certbot-digitalocean:
+  certbot-digitalocean-stage:
     image: certbot/dns-digitalocean
-    container_name: certbot-digitalocean
+    container_name: certbot-digitalocean-stage
     volumes:
       - certbot-www:/var/www/certbot/:rw
       - certbot-conf:/etc/letsencrypt/:rw
       - ./digitalocean.ini:/digitalocean.ini
     command: certonly --dns-digitalocean --dns-digitalocean-credentials /digitalocean.ini -d ${DOMAIN} -d '*.${DOMAIN}'  --email ${DOMAIN_OWNER_EMAIL} --agree-tos
     env_file: .env
+
+  certbot-digitalocean-prod:
+    image: phonxis/neofincore_certbot_master:latest
+    container_name: certbot-digitalocean-prod
+    volumes:
+      - certbot-www:/var/www/certbot/:rw
+      - certbot-conf:/etc/letsencrypt/:rw
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} --agree-tos
 
   postgres:
     image: phonxis/neofincore_postgres_master:latest
