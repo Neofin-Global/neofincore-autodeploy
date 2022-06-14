@@ -9,16 +9,22 @@ from psycopg2 import Error
 def get_domains() -> str:
     parser = argparse.ArgumentParser(description="Script paramenters", formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--all', help='return all domains', action='store_true')
+    parser.add_argument('--domain', help='main domain')
+    parser.add_argument('--db_host', help='DB host')
+    parser.add_argument('--db_port', help='DB port')
+    parser.add_argument('--db_name', help='DB name')
+    parser.add_argument('--db_user', help='DB user')
+    parser.add_argument('--db_pass', help='DB pass')
     args = parser.parse_args()
 
     timedelta_minutes = 3
 
-    parent_host: str = os.getenv("PARENT_HOST")
-    postgres_host: str = os.getenv("POSTGRES_HOST")
-    postgres_port: str = os.getenv("POSTGRES_PORT")
-    postgres_db: str = os.getenv("POSTGRES_DB")
-    postgres_user: str = os.getenv("POSTGRES_USER")
-    postgres_password: str = os.getenv("POSTGRES_PASSWORD")
+    parent_host: str = args.domain  # os.getenv("PARENT_HOST")
+    postgres_host: str = args.db_host  # os.getenv("POSTGRES_HOST")
+    postgres_port: str = args.db_port  # os.getenv("POSTGRES_PORT")
+    postgres_db: str = args.db_name  # os.getenv("POSTGRES_DB")
+    postgres_user: str = args.db_user  # os.getenv("POSTGRES_USER")
+    postgres_password: str = args.db_pass  # os.getenv("POSTGRES_PASSWORD")
 
     conn_kw = dict(
         host=postgres_host,
