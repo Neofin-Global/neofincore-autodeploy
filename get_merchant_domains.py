@@ -45,8 +45,8 @@ def get_domains() -> str:
                 return " ".join([f"{s[0]}.{parent_host}" for s in records])  # "subdomain1 subdomain2"
 
         except (Exception, Error) as error:
-            print("Error while connecting to PostgreSQL", error)
-
+            raise Exception(f"Error while connecting to PostgreSQL {error}")
+    return ""
 
 if __name__ == "__main__":
     print(get_domains())
