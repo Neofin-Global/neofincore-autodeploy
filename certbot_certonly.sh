@@ -17,7 +17,7 @@ export DOMAIN_OWNER_EMAIL=$DOMAIN_OWNER_EMAIL
 
 POSTGRES_HOST=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' postgresql)
 
-domains_arr=$(python3 /var/site/neofincore-autodeploy/get_merchant_domains.py --domain $PARENT_HOST --db_host $POSTGRES_HOST --db_port $POSTGRES_PORT --db_name $POSTGRES_DB --db_user $POSTGRES_USER --db_pass $POSTGRES_PASSWORD);
+domains_arr=$(python3 /var/site/neofincore-autodeploy/get_merchant_domains.py --domain ${PARENT_HOST} --db_host ${POSTGRES_HOST} --db_port ${POSTGRES_PORT} --db_name ${POSTGRES_DB} --db_user ${POSTGRES_USER} --db_pass ${POSTGRES_PASSWORD});
 echo "NEW merchant domains:";
 echo $domains_arr
 
