@@ -18,6 +18,6 @@ if [[ -n "$domains_arr" ]]; then
 
 
   for domain in $domains_arr; do
-    docker compose -f docker-compose.yml run certbot-digitalocean-prod certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d $domain --agree-tos
+    docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml run certbot-digitalocean-prod certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d $domain --agree-tos
   done
 fi
