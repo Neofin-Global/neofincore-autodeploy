@@ -17,7 +17,7 @@ def get_domains() -> str:
     parser.add_argument('--db_pass', help='DB pass')
     args = parser.parse_args()
 
-    timedelta_minutes = 3
+    timedelta_minutes = 5
 
     parent_host: str = args.domain  # os.getenv("PARENT_HOST")
     postgres_host: str = args.db_host  # os.getenv("POSTGRES_HOST")
