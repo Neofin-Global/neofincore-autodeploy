@@ -19,5 +19,7 @@ if [[ -n "$domains_arr" ]]; then
 
   for domain in $domains_arr; do
     docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml run certbot-digitalocean-prod certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d $domain --agree-tos
+    echo "server { listen 443 ssl http2; listen [::]:443 ssl http2; server_name $domain; ssl_certificate /etc/nginx/ssl/live/$domain/fullchain.pem; ssl_certificate_key /etc/nginx/ssl/live/$domain/privkey.pem; location / { proxy_pass http://webapp; } location /.well-known/acme-challenge/ { root /var/www/certbot; } location /media/ { alias /media/; } location /static/ { alias /static/; } }" >> /var/site/neofincore-autodeploy/nginx/default.conf
+    docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml restart nginx
   done
 fi
