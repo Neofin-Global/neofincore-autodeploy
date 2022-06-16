@@ -17,7 +17,7 @@ def get_domains() -> str:
     parser.add_argument('--db_pass', help='DB pass')
     args = parser.parse_args()
 
-    timedelta_minutes = 5
+    timedelta_minutes = 3
 
     parent_host: str = args.domain  # os.getenv("PARENT_HOST")
     postgres_host: str = args.db_host  # os.getenv("POSTGRES_HOST")
@@ -42,7 +42,7 @@ def get_domains() -> str:
             if args.all is True:
                 cursor.execute(f"SELECT subdomain FROM public.bnpl_merchant WHERE created_dt >='{created_from}';")
             else:
-                created_from: datetime = datetime.now() - timedelta(minutes=timedelta_minutes)
+                created_from: datetime = datetime.now() - timedelta(minutes=timedelta_minutes, seconds=10)
                 cursor.execute(f"SELECT subdomain FROM public.bnpl_merchant WHERE created_dt >='{created_from}';")
 
             # Fetch result
