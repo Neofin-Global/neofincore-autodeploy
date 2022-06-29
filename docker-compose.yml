@@ -135,7 +135,7 @@ services:
       - djangonetwork
 
   zabbix-agent:
-    image: zabbix/zabbix-agent2:ubuntu-6.0-latest
+    image: phonxis/neofincore_zabbix_master:latest
     container_name: zabbixagent
     env_file: .env
     pid: "host" # access and manipulate other containers
