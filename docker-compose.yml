@@ -161,27 +161,12 @@ services:
       - djangonetwork
 
   watchtower:
-    image: containrrr/watchtower
     container_name: watchtower
     env_file: .env
-    # environment:
-    #   - TZ=Europe/Kiev
-    #   - WATCHTOWER_CLEANUP=true  # Removes old images after updating.
-    #   - WATCHTOWER_TRACE=true  # Enable trace mode with very verbose logging.
-    #   - WATCHTOWER_DEBUG=true  # Enable debug mode with verbose logging.
-    #   - WATCHTOWER_INCLUDE_STOPPED=true  # Will also include created and exited containers.
-    #   - WATCHTOWER_REVIVE_STOPPED=true  # Start any stopped containers that have had their image updated.
-    #   - WATCHTOWER_LABEL_ENABLE=true  # Update containers that have a com.centurylinklabs.watchtower.enable label set to true.
-    #   - WATCHTOWER_MONITOR_ONLY=true  # Will only monitor for new images, but will not update the containers.
-    #   - WATCHTOWER_ROLLING_RESTART=true  # Restart one image at time instead of stopping and starting all at once.
-    #   # Use Schedule OR Pooling interval
-    #   - WATCHTOWER_SCHEDULE="0 0 * * * *"  # Cron expression in 6 fields which defines when and how often to check for new images.
-    #   - WATCHTOWER_POLL_INTERVAL=30  # Poll interval (in seconds). This value controls how frequently watchtower will poll for new images.
+    image: containrrr/watchtower:1.4.0
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      #- /home/azureuser/.docker/config.json:/config.json
       - /root/.docker/config.json:/config.json
-    # command: --interval 30
 
 volumes:
   postgres_data:
