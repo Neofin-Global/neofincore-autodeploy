@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   django:
-    image: phonxis/neofincore_django_master:latest
+    image: index.docker.io/phonxis/neofincore_django_master:autoupdate
     container_name: django
     restart: always
     volumes:
@@ -19,15 +19,55 @@ services:
     links:
       - postgres:postgres
     env_file: .env
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
-  redis:
-    image: redis:6
-    container_name: redis
+  celeryworker:
+    image: index.docker.io/phonxis/neofincore_celeryworker_master:autoupdate
+    container_name: celeryworker
+    command: celery -A core.celery_app worker -l INFO
+    env_file: .env
+    depends_on:
+      - django
+      - redis
     networks:
       - djangonetwork
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
+
+  celerybeat:
+    image: index.docker.io/phonxis/neofincore_celerybeat_master:autoupdate
+    container_name: celerybeat
+    command: celery -A core.celery_app beat -l INFO
+    env_file: .env
+    depends_on:
+      - django
+      - redis
+    networks:
+      - djangonetwork
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
+
+  flower:
+    image: index.docker.io/phonxis/neofincore_flower_master:autoupdate
+    container_name: flower
+    command: >
+      sh -c "celery \
+             -A core.celery_app \
+             -b "${CELERY_BROKER_URL}" \
+             flower" \
+             --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
+    env_file: .env
+    depends_on:
+      - django
+      - redis
+    networks:
+      - djangonetwork
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
   nginx:
-    image: phonxis/neofincore_nginx_master:latest
+    image: index.docker.io/phonxis/neofincore_nginx_master:autoupdate
     container_name: nginx
     restart: always
     expose:
@@ -46,6 +86,24 @@ services:
       - django
     networks:
       - nginx_network
+
+  postgres:
+    image: phonxis/neofincore_postgres_master:autoupdate
+    container_name: postgresql
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - djangonetwork
+    env_file: .env
+
+  redis:
+    image: redis:6
+    container_name: redis
+    networks:
+      - djangonetwork
 
   certbot-digitalocean-stage:
     image: certbot/dns-digitalocean
@@ -77,65 +135,15 @@ services:
     env_file: .env
 
   certbot-prod:
-    image: phonxis/neofincore_certbot_master:latest
+    image: phonxis/neofincore_certbot_master:autoupdate
     container_name: certbot-prod
     volumes:
       - certbot-www:/var/www/certbot/:rw
       - certbot-conf:/etc/letsencrypt/:rw
     command: certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} --agree-tos
 
-  postgres:
-    image: phonxis/neofincore_postgres_master:latest
-    container_name: postgresql
-    restart: always
-    ports:
-      - 5432:5432
-    volumes:
-      - postgres_data:/var/lib/postgresql/data/
-    networks:
-      - djangonetwork
-    env_file: .env
-
-  celeryworker:
-    image: phonxis/neofincore_celeryworker_master:latest
-    container_name: celeryworker
-    command: celery -A core.celery_app worker -l INFO
-    env_file: .env
-    depends_on:
-      - django
-      - redis
-    networks:
-      - djangonetwork
-
-  celerybeat:
-    image: phonxis/neofincore_celerybeat_master:latest
-    container_name: celerybeat
-    command: celery -A core.celery_app beat -l INFO
-    env_file: .env
-    depends_on:
-      - django
-      - redis
-    networks:
-      - djangonetwork
-
-  flower:
-    image: phonxis/neofincore_flower_master:latest
-    container_name: flower
-    command: >
-      sh -c "celery \
-             -A core.celery_app \
-             -b "${CELERY_BROKER_URL}" \
-             flower" \
-             --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
-    env_file: .env
-    depends_on:
-      - django
-      - redis
-    networks:
-      - djangonetwork
-
   zabbix-agent:
-    image: phonxis/neofincore_zabbix_master:latest
+    image: phonxis/neofincore_zabbix_master:autoupdate
     container_name: zabbixagent
     env_file: .env
     pid: "host" # access and manipulate other containers
@@ -151,6 +159,29 @@ services:
       - /etc/timezone:/etc/timezone:ro
     networks:
       - djangonetwork
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    env_file: .env
+    # environment:
+    #   - TZ=Europe/Kiev
+    #   - WATCHTOWER_CLEANUP=true  # Removes old images after updating.
+    #   - WATCHTOWER_TRACE=true  # Enable trace mode with very verbose logging.
+    #   - WATCHTOWER_DEBUG=true  # Enable debug mode with verbose logging.
+    #   - WATCHTOWER_INCLUDE_STOPPED=true  # Will also include created and exited containers.
+    #   - WATCHTOWER_REVIVE_STOPPED=true  # Start any stopped containers that have had their image updated.
+    #   - WATCHTOWER_LABEL_ENABLE=true  # Update containers that have a com.centurylinklabs.watchtower.enable label set to true.
+    #   - WATCHTOWER_MONITOR_ONLY=true  # Will only monitor for new images, but will not update the containers.
+    #   - WATCHTOWER_ROLLING_RESTART=true  # Restart one image at time instead of stopping and starting all at once.
+    #   # Use Schedule OR Pooling interval
+    #   - WATCHTOWER_SCHEDULE="0 0 * * * *"  # Cron expression in 6 fields which defines when and how often to check for new images.
+    #   - WATCHTOWER_POLL_INTERVAL=30  # Poll interval (in seconds). This value controls how frequently watchtower will poll for new images.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      #- /home/azureuser/.docker/config.json:/config.json
+      - /root/.docker/config.json:/config.json
+    # command: --interval 30
 
 volumes:
   postgres_data:
