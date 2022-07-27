@@ -19,8 +19,8 @@ services:
     links:
       - postgres:postgres
     env_file: .env
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
   celeryworker:
     image: index.docker.io/phonxis/neofincore_celeryworker_master:${APPLICATION_VERSION:-latest}
@@ -32,8 +32,8 @@ services:
       - redis
     networks:
       - djangonetwork
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
   celerybeat:
     image: index.docker.io/phonxis/neofincore_celerybeat_master:${APPLICATION_VERSION:-latest}
@@ -45,8 +45,8 @@ services:
       - redis
     networks:
       - djangonetwork
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
   flower:
     image: index.docker.io/phonxis/neofincore_flower_master:${APPLICATION_VERSION:-latest}
@@ -63,8 +63,8 @@ services:
       - redis
     networks:
       - djangonetwork
-    labels:
-      - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
   nginx:
     image: index.docker.io/phonxis/neofincore_nginx_master:${APPLICATION_VERSION:-latest}
@@ -160,13 +160,13 @@ services:
     networks:
       - djangonetwork
 
-  watchtower:
-    container_name: watchtower
-    env_file: .env
-    image: containrrr/watchtower:1.4.0
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /root/.docker/config.json:/config.json
+  # watchtower:
+  #   container_name: watchtower
+  #   env_file: .env
+  #   image: containrrr/watchtower:1.4.0
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - /root/.docker/config.json:/config.json
 
 volumes:
   postgres_data:
