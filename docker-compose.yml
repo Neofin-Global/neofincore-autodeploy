@@ -27,6 +27,7 @@ services:
     container_name: celeryworker
     command: celery -A core.celery_app worker -l INFO
     env_file: .env
+    restart: always
     depends_on:
       - django
       - redis
@@ -40,6 +41,7 @@ services:
     container_name: celerybeat
     command: celery -A core.celery_app beat -l INFO
     env_file: .env
+    restart: always
     depends_on:
       - django
       - redis
@@ -51,12 +53,8 @@ services:
   flower:
     image: index.docker.io/phonxis/neofincore_flower_master:${APPLICATION_VERSION:-latest}
     container_name: flower
-    command: >
-      sh -c "celery \
-             -A core.celery_app \
-             -b "${CELERY_BROKER_URL}" \
-             flower" \
-             --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
+    restart: always
+    command: celery -A core.celery_app -b "${CELERY_BROKER_URL}" flower --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
     env_file: .env
     depends_on:
       - django
@@ -102,6 +100,7 @@ services:
   redis:
     image: redis:6
     container_name: redis
+    restart: always
     networks:
       - djangonetwork
 
