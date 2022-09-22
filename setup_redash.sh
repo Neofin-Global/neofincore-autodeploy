@@ -61,4 +61,4 @@ setup_compose() {
 install_requirements
 create_directories
 create_config
-setup_compose
+# setup_compose
