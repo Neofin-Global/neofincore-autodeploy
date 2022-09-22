@@ -113,8 +113,8 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
       source /var/site/neofincore-autodeploy/.env
 
       # Update containers
-      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml up --quiet-pull --build --no-start
-      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml up -d --quiet-pull
+      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile production up --quiet-pull --build --no-start
+      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile production up -d --quiet-pull
       # Remove old images
       docker image prune -a -f
 
