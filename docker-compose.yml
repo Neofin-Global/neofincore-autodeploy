@@ -193,7 +193,7 @@ services:
     volumes:
       - certbot-www:/var/www/certbot/:rw
       - certbot-conf:/etc/letsencrypt/:rw
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} --agree-tos
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d 'redash.${DOMAIN}' --agree-tos
     profiles:
       - production
 
