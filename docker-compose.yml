@@ -97,9 +97,9 @@ services:
     profiles:
       - stage
 
-  nginx:
+  nginx-prod:
     image: index.docker.io/phonxis/neofincore_nginx_master:${APPLICATION_VERSION:-latest}
-    container_name: nginx
+    container_name: nginx-prod
     restart: always
     expose:
       - 80
@@ -283,7 +283,6 @@ services:
   redash-redis:
     image: redis:5.0-alpine
     container_name: redash_redis
-    restart: always
     networks:
       - nginx_network
     links:
@@ -295,7 +294,6 @@ services:
     container_name: redash_postgres
     volumes:
       - /opt/redash/postgres-data:/var/lib/postgresql/data
-    restart: always
     networks:
       - nginx_network
     links:
