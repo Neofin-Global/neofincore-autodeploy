@@ -76,15 +76,15 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
         # Activate ENV
         source /var/site/neofincore-autodeploy/.env
         # Update containers
-        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml up --quiet-pull --build --no-start
-        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml down
+        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile stage up --quiet-pull --build --no-start
+        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile stage down
         # Remove cocrete images
         docker image rm ${django_sha_clear} -f
         docker image rm ${celerybeat_sha_clear} -f
         docker image rm ${celeryworker_sha_clear} -f
         docker image rm ${flower_sha_clear} -f
 
-        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml up -d --quiet-pull
+        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile stage up -d --quiet-pull
         # Remove old images
         docker image prune -a -f
         # Send notification about upgrade to Control Panel (neo-fin.com)

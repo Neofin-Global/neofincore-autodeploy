@@ -94,6 +94,31 @@ services:
       - django
     networks:
       - nginx_network
+    profiles:
+      - stage
+
+  nginx:
+    image: index.docker.io/phonxis/neofincore_nginx_master:${APPLICATION_VERSION:-latest}
+    container_name: nginx
+    restart: always
+    expose:
+      - 80
+      - 443
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/default-production.conf:/etc/nginx/conf.d/default.conf
+      - static:/static
+      - media:/media
+      - certbot-www:/var/www/certbot/:ro
+      - certbot-conf:/etc/nginx/ssl/:ro
+    depends_on:
+      - django
+    networks:
+      - nginx_network
+    profiles:
+      - production
 
   postgres:
     image: phonxis/neofincore_postgres_master:${APPLICATION_VERSION:-latest}
@@ -124,6 +149,8 @@ services:
       - ./digitalocean.ini:/digitalocean.ini
     command: certonly --dns-digitalocean --dns-digitalocean-credentials /digitalocean.ini -d ${DOMAIN} -d '*.${DOMAIN}'  --email ${DOMAIN_OWNER_EMAIL} --agree-tos
     env_file: .env
+    profiles:
+      - stage
 
   certbot-aws-stage:
     image: certbot/dns-route53 
@@ -133,6 +160,8 @@ services:
       - certbot-conf:/etc/letsencrypt/:rw
     command: certonly --dns-route53 --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}' --agree-tos
     env_file: .env
+    profiles:
+      - stage
 
   certbot-azure-stage:
     image: phonxis/certbot-dns-azure
@@ -143,6 +172,20 @@ services:
       - ./dns_creds.ini:/dns_creds.ini
     command: certbot certonly --authenticator dns-azure --preferred-challenges dns --noninteractive --agree-tos --dns-azure-config /dns_creds.ini --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}'
     env_file: .env
+    profiles:
+      - stage
+
+  #certbot-google-stage:
+  #  image: certbot/dns-google
+  #  container_name: certbot-google-stage
+  #  volumes:
+  #    - certbot-www:/var/www/certbot/:rw
+  #    - certbot-conf:/etc/letsencrypt/:rw
+  #    - ./google.json:/google.json
+  #  command: certbot certonly --dns-google --agree-tos --dns-google-credentials /google.json --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}'
+  #  env_file: .env
+  #  profiles:
+  #    - stage
 
   certbot-prod:
     image: phonxis/neofincore_certbot_master:latest
@@ -151,6 +194,8 @@ services:
       - certbot-www:/var/www/certbot/:rw
       - certbot-conf:/etc/letsencrypt/:rw
     command: certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} --agree-tos
+    profiles:
+      - production
 
   zabbix-agent:
     image: phonxis/neofincore_zabbix_master:${APPLICATION_VERSION:-latest}
