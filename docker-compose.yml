@@ -151,6 +151,7 @@ services:
     env_file: .env
     profiles:
       - stage
+      - digitalocean
 
   certbot-aws-stage:
     image: certbot/dns-route53
@@ -162,6 +163,7 @@ services:
     env_file: .env
     profiles:
       - stage
+      - aws
 
   certbot-azure-stage:
     image: phonxis/certbot-dns-azure
@@ -174,6 +176,7 @@ services:
     env_file: .env
     profiles:
       - stage
+      - azure
 
   certbot-google-stage:
    image: certbot/dns-google
@@ -186,6 +189,7 @@ services:
    env_file: .env
    profiles:
      - stage
+     - google
 
   certbot-prod:
     image: phonxis/neofincore_certbot_master:latest
