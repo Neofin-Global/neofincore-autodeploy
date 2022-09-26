@@ -150,7 +150,6 @@ services:
     command: certonly --dns-digitalocean --dns-digitalocean-credentials /digitalocean.ini -d ${DOMAIN} -d '*.${DOMAIN}'  --email ${DOMAIN_OWNER_EMAIL} --agree-tos
     env_file: .env
     profiles:
-      - stage
       - digitalocean
 
   certbot-aws-stage:
@@ -162,7 +161,6 @@ services:
     command: certonly --dns-route53 --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}' --agree-tos
     env_file: .env
     profiles:
-      - stage
       - aws
 
   certbot-azure-stage:
@@ -175,7 +173,6 @@ services:
     command: certbot certonly --authenticator dns-azure --preferred-challenges dns --noninteractive --agree-tos --dns-azure-config /dns_creds.ini --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}'
     env_file: .env
     profiles:
-      - stage
       - azure
 
   certbot-google-stage:
@@ -188,7 +185,6 @@ services:
    command: certonly --dns-google --agree-tos --dns-google-credentials /google.json --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}'
    env_file: .env
    profiles:
-     - stage
      - google
 
   certbot-prod:
