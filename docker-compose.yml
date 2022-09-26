@@ -38,6 +38,8 @@ services:
     command: celery -A core.celery_app worker -l INFO
     env_file: .env
     restart: always
+    volumes:
+      - media:/media
     depends_on:
       - django
       - redis
