@@ -1,3 +1,6 @@
+source .version_env
+echo ${GITHUB_SHA}
+
 python manage.py migrate
 python manage.py collectstatic --noinput --clear
 python manage.py compilemessages
