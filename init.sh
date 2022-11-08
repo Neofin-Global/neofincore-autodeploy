@@ -2,7 +2,7 @@ python manage.py migrate
 python manage.py collectstatic --noinput --clear
 python manage.py compilemessages
 
-# Save serivce token to DB
+# Save service token to DB
 python manage.py initial_token_setup
 
 python manage.py create_superadmin --username ${DJANGO_SUPERUSER_USERNAME} --email ${DJANGO_SUPERUSER_EMAIL}
