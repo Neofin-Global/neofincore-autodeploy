@@ -164,7 +164,8 @@ services:
     command: certonly --dns-route53 --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}' --agree-tos
     env_file: .env
     profiles:
-      - aws
+      # - aws
+      - ec2
 
   certbot-azure-stage:
     image: phonxis/certbot-dns-azure
@@ -188,7 +189,8 @@ services:
    command: certonly --dns-google --agree-tos --dns-google-credentials /google.json --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}'
    env_file: .env
    profiles:
-     - google
+     # - google
+     - gce
 
   certbot-prod:
     image: phonxis/neofincore_certbot_master:latest
