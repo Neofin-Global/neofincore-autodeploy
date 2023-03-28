@@ -40,7 +40,7 @@ def get_domains() -> str:
         try:
             # Executing a SQL query
             if args.all is True:
-                cursor.execute(f"SELECT subdomain FROM public.bnpl_merchant WHERE created_dt >='{created_from}';")
+                cursor.execute(f"SELECT subdomain FROM public.bnpl_merchant;")
             else:
                 created_from: datetime = datetime.now() - timedelta(minutes=timedelta_minutes, seconds=10)
                 cursor.execute(f"SELECT subdomain FROM public.bnpl_merchant WHERE created_dt >='{created_from}';")
