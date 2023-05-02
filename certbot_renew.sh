@@ -23,7 +23,11 @@ fi
 
 if [[ -n "$CERTBOT_CONTAINER" ]]; then
   if [[ "${PROJECT_ENVIRONMENT}" == "stage" ]]; then
-    docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile stage run ${CERTBOT_CONTAINER} renew --quiet
+    if [[ "${PROVIDER_NAME}" == "azure" ]]; then
+      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile stage run ${CERTBOT_CONTAINER} certbot renew --quiet
+    else
+      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile stage run ${CERTBOT_CONTAINER} renew --quiet
+    fi
     docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile stage --profile ${PROVIDER_NAME} restart nginx
   else
     docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile production run certbot-prod renew --quiet
