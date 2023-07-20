@@ -97,23 +97,30 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
     else
       echo "Versions NOT equal";
 
-      # Save current version
-      PREV_VERSION=${APPLICATION_VERSION}
+      # 0 - image exists
+      # 1 - image not found
+      image_not_found=$(docker manifest inspect phonxis/neofincore_django_master:${NEW_VERSION} > /dev/null ; echo $?)
+      if [[ "${image_not_found}" == "1" ]]; then
+        echo "Image phonxis/neofincore_django_master:${NEW_VERSION} not available"
+      else
+        # Save current version
+        PREV_VERSION=${APPLICATION_VERSION}
 
-      # Set new verion to ENV
-      sed -i "s/APPLICATION_VERSION=${APPLICATION_VERSION}/APPLICATION_VERSION=$NEW_VERSION/gI" /var/site/neofincore-autodeploy/.env
-      # Activate ENV
-      source /var/site/neofincore-autodeploy/.env
+        # Set new verion to ENV
+        sed -i "s/APPLICATION_VERSION=${APPLICATION_VERSION}/APPLICATION_VERSION=$NEW_VERSION/gI" /var/site/neofincore-autodeploy/.env
+        # Activate ENV
+        source /var/site/neofincore-autodeploy/.env
 
-      # Update containers
-      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile production --profile ${PROVIDER_NAME} down
-      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile production --profile ${PROVIDER_NAME} pull -q
-      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile production --profile ${PROVIDER_NAME} up -d
-      # Remove old images
-      docker image prune -a -f
+        # Update containers
+        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile production --profile ${PROVIDER_NAME} down
+        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile production --profile ${PROVIDER_NAME} pull -q
+        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile production --profile ${PROVIDER_NAME} up -d
+        # Remove old images
+        docker image prune -a -f
 
-      # Send notification about upgrade to Control Panel (neo-fin.com)
-      curl --location --request POST "https://${CONTROL_PANEL_HOST}/api/v1/projects/${PROJECT_UID}/upgrades/notification/" --header "Authorization: Service-token ${CONTROL_PANEL_SERVICE_TOKEN}" --header 'Content-Type: application/json' --data-raw "{\"previous_version\": \"${PREV_VERSION}\", \"new_version\": \"${NEW_VERSION}\", \"environment\": \"production\"}"
+        # Send notification about upgrade to Control Panel (neo-fin.com)
+        curl --location --request POST "https://${CONTROL_PANEL_HOST}/api/v1/projects/${PROJECT_UID}/upgrades/notification/" --header "Authorization: Service-token ${CONTROL_PANEL_SERVICE_TOKEN}" --header 'Content-Type: application/json' --data-raw "{\"previous_version\": \"${PREV_VERSION}\", \"new_version\": \"${NEW_VERSION}\", \"environment\": \"production\"}"
+      fi
     fi
   fi
 fi
