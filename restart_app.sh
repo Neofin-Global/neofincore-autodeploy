@@ -11,6 +11,6 @@ exec 2> >(while read -r line; do printf '[%s] %s\n' "$(date --rfc-3339=seconds)"
 source /var/site/neofincore-autodeploy/.env
 
 # Stop containers
-docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
+docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" down
 # Start containers
-docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
+docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" up -d
