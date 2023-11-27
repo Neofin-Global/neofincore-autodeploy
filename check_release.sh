@@ -76,6 +76,8 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
         docker volume prune -f
         # Send notification about upgrade to Control Panel (neo-fin.com)
         curl --location --request POST "https://${CONTROL_PANEL_HOST}/api/v1/projects/${PROJECT_UID}/upgrades/notification/" --header "Authorization: Service-token ${CONTROL_PANEL_SERVICE_TOKEN}" --header 'Content-Type: application/json' --data-raw "{\"previous_version\": \"${PREV_VERSION}\", \"new_version\": \"${NEW_VERSION}\", \"environment\": \"stage\"}"
+        # Execute initializing scripts (commands) like 'collectstatic', 'compilemessages' etc.
+        docker exec -it django bash ./init.sh
       fi
     else
       echo "Both digests are empty."
@@ -84,6 +86,8 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
       docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
       # Send notification about upgrade to Control Panel (neo-fin.com)
       curl --location --request POST "https://${CONTROL_PANEL_HOST}/api/v1/projects/${PROJECT_UID}/upgrades/notification/" --header "Authorization: Service-token ${CONTROL_PANEL_SERVICE_TOKEN}" --header 'Content-Type: application/json' --data-raw "{\"previous_version\": \"${PREV_VERSION}\", \"new_version\": \"${NEW_VERSION}\", \"environment\": \"stage\"}"
+      # Execute initializing scripts (commands) like 'collectstatic', 'compilemessages' etc.
+      docker exec -it django bash ./init.sh
     fi
 
   else
@@ -124,6 +128,9 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
 
         # Send notification about upgrade to Control Panel (neo-fin.com)
         curl --location --request POST "https://${CONTROL_PANEL_HOST}/api/v1/projects/${PROJECT_UID}/upgrades/notification/" --header "Authorization: Service-token ${CONTROL_PANEL_SERVICE_TOKEN}" --header 'Content-Type: application/json' --data-raw "{\"previous_version\": \"${PREV_VERSION}\", \"new_version\": \"${NEW_VERSION}\", \"environment\": \"production\"}"
+
+        # Execute initializing scripts (commands) like 'collectstatic', 'compilemessages' etc.
+        docker exec -it django bash ./init.sh
       fi
     fi
   fi
