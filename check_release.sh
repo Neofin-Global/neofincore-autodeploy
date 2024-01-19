@@ -70,6 +70,7 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
         docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} pull -q
         docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
         docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
+        echo "Stage instance is starting up..."
         # Remove old images
         docker image prune -a -f
         # Remove unused volumes
@@ -77,17 +78,20 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
         # Send notification about upgrade to Control Panel (neo-fin.com)
         curl --location --request POST "https://${CONTROL_PANEL_HOST}/api/v1/projects/${PROJECT_UID}/upgrades/notification/" --header "Authorization: Service-token ${CONTROL_PANEL_SERVICE_TOKEN}" --header 'Content-Type: application/json' --data-raw "{\"previous_version\": \"${PREV_VERSION}\", \"new_version\": \"${NEW_VERSION}\", \"environment\": \"stage\"}"
         # Execute initializing scripts (commands) like 'collectstatic', 'compilemessages' etc.
-        docker exec -it django bash ./init.sh
+        docker exec django bash ./init.sh
+        echo "Stage instance initialized"
       fi
     else
       echo "Both digests are empty."
       docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
       docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} pull -q
       docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
+      echo "Stage instance is starting up..."
       # Send notification about upgrade to Control Panel (neo-fin.com)
       curl --location --request POST "https://${CONTROL_PANEL_HOST}/api/v1/projects/${PROJECT_UID}/upgrades/notification/" --header "Authorization: Service-token ${CONTROL_PANEL_SERVICE_TOKEN}" --header 'Content-Type: application/json' --data-raw "{\"previous_version\": \"${PREV_VERSION}\", \"new_version\": \"${NEW_VERSION}\", \"environment\": \"stage\"}"
       # Execute initializing scripts (commands) like 'collectstatic', 'compilemessages' etc.
-      docker exec -it django bash ./init.sh
+      docker exec django bash ./init.sh
+      echo "Stage instance initialized"
     fi
 
   else
@@ -121,6 +125,7 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
         docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
         docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} pull -q
         docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
+        echo "Production instance is starting up..."
         # Remove old images
         docker image prune -a -f
         # Remove unused volumes
@@ -130,7 +135,8 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
         curl --location --request POST "https://${CONTROL_PANEL_HOST}/api/v1/projects/${PROJECT_UID}/upgrades/notification/" --header "Authorization: Service-token ${CONTROL_PANEL_SERVICE_TOKEN}" --header 'Content-Type: application/json' --data-raw "{\"previous_version\": \"${PREV_VERSION}\", \"new_version\": \"${NEW_VERSION}\", \"environment\": \"production\"}"
 
         # Execute initializing scripts (commands) like 'collectstatic', 'compilemessages' etc.
-        docker exec -it django bash ./init.sh
+        docker exec django bash ./init.sh
+        echo "Production instance initialized"
       fi
     fi
   fi
