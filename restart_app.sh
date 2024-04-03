@@ -10,7 +10,13 @@ exec 2> >(while read -r line; do printf '[%s] %s\n' "$(date --rfc-3339=seconds)"
 # Activate ENV
 source /var/site/neofincore-autodeploy/.env
 
+# Check if local.docker-compose.yml exists, use it, otherwise fallback to docker-compose.yml
+COMPOSE_FILE="docker-compose.yml"
+if [ -f "/var/site/neofincore-autodeploy/local.docker-compose.yml" ]; then
+  COMPOSE_FILE="local.docker-compose.yml"
+fi
+
 # Stop containers
-docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" down
+docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" down
 # Start containers
-docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" up -d
+docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" up -d
