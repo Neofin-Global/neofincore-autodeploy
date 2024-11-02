@@ -16,6 +16,12 @@ echo "Autoupdate is enabled: ${AUTOUPDATE_ENABLED}";
 
 if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
 
+  # Check if local.docker-compose.yml exists, use it, otherwise fallback to docker-compose.yml
+  COMPOSE_FILE="docker-compose.yml"
+  if [ -f "/var/site/neofincore-autodeploy/local.docker-compose.yml" ]; then
+    COMPOSE_FILE="local.docker-compose.yml"
+  fi
+
   if [[ "${PROJECT_ENVIRONMENT}" == "stage" ]]; then
     # update stage to latest
     echo "Update stage instance";
@@ -67,9 +73,9 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
         echo "Current version: ${APPLICATION_VERSION}; New version: ${NEW_VERSION}";
 
         # Update containers
-        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} pull -q
-        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
-        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
+        docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} pull -q
+        docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
+        docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
         echo "Stage instance is starting up..."
         # Remove old images
         docker image prune -a -f
@@ -83,9 +89,9 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
       fi
     else
       echo "Both digests are empty."
-      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
-      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} pull -q
-      docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
+      docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
+      docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} pull -q
+      docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
       echo "Stage instance is starting up..."
       # Send notification about upgrade to Control Panel (neo-fin.com)
       curl --location --request POST "https://${CONTROL_PANEL_HOST}/api/v1/projects/${PROJECT_UID}/upgrades/notification/" --header "Authorization: Service-token ${CONTROL_PANEL_SERVICE_TOKEN}" --header 'Content-Type: application/json' --data-raw "{\"previous_version\": \"${PREV_VERSION}\", \"new_version\": \"${NEW_VERSION}\", \"environment\": \"stage\"}"
@@ -122,9 +128,9 @@ if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
         source /var/site/neofincore-autodeploy/.env
 
         # Update containers
-        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
-        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} pull -q
-        docker compose -f /var/site/neofincore-autodeploy/docker-compose.yml --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
+        docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} down
+        docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} pull -q
+        docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile ${PROJECT_ENVIRONMENT} --profile ${PROVIDER_NAME} up -d
         echo "Production instance is starting up..."
         # Remove old images
         docker image prune -a -f

@@ -49,6 +49,22 @@ services:
     # labels:
     #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
+  celeryworker_low_priority:
+    image: phonxis/neofincore_celeryworker_low_priority_master:${APPLICATION_VERSION:-latest}
+    container_name: celeryworker_low_priority
+    command: celery -A core.celery_app worker -l INFO -Q low_priority
+    env_file: .env
+    restart: always
+    volumes:
+      - media:/media
+    depends_on:
+      - django
+      - redis
+    networks:
+      - djangonetwork
+    # labels:
+    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
+
   celerybeat:
     image: index.docker.io/phonxis/neofincore_celerybeat_master:${APPLICATION_VERSION:-latest}
     container_name: celerybeat
@@ -233,6 +249,7 @@ services:
     <<: *redash-service
     command: server
     container_name: redash_server
+    restart: always
     ports:
       - "5000:5000"
     environment:
