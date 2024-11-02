@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  django:
+    image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
+    container_name: django
+    restart: always
+    volumes:
+      - nginx_conf:/nginx
+      - static:/staticfiles
+      - media:/media
+      - ./wait-for-it.sh:/wait-for-it.sh
+      - locale:/project_translations/locale
+    entrypoint: ["/wait-for-it.sh","${RDS_ENDPOINT}","--","/start.sh"]
+    networks:
+      - nginx_network
+    env_file: .env
+
+  nginx:
+    image: index.docker.io/phonxis/neofincore_nginx_master:${APPLICATION_VERSION:-latest}
+    container_name: nginx
+    restart: always
+    expose:
+      - 80
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/default-lite.conf:/etc/nginx/conf.d/default.conf
+      - static:/static
+      - media:/media
+    depends_on:
+      - django
+    networks:
+      - nginx_network
+
+volumes:
+  nginx_conf:
+  static:
+  media:
+  locale:
+
+networks:
+  nginx_network:
+    driver: bridge
