@@ -39,7 +39,7 @@ services:
     image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
     container_name: celeryworker
     #command: celery -A core.celery_app worker -l INFO
-    entrypoint: ["/wait-for-it.sh","${VALKEY_ENDPOINT}","--","/start_worker_main.sh"]
+    entrypoint: ["/wait-for-it.sh","${REDIS_ENDPOINT}","--","/start_worker_main.sh"]
     env_file: .env
     restart: always
     volumes:
@@ -54,7 +54,7 @@ services:
     image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
     container_name: celeryworker_low_priority
     #command: celery -A core.celery_app worker -l INFO -Q low_priority
-    entrypoint: ["/wait-for-it.sh","${VALKEY_ENDPOINT}","--","/start_worker_lowpriority.sh"]
+    entrypoint: ["/wait-for-it.sh","${REDIS_ENDPOINT}","--","/start_worker_lowpriority.sh"]
     env_file: .env
     restart: always
     volumes:
@@ -69,7 +69,7 @@ services:
     image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
     container_name: celerybeat
     #command: celery -A core.celery_app beat -l INFO
-    entrypoint: ["/wait-for-it.sh","${VALKEY_ENDPOINT}","--","/start_worker_beat.sh"]
+    entrypoint: ["/wait-for-it.sh","${REDIS_ENDPOINT}","--","/start_worker_beat.sh"]
     env_file: .env
     restart: always
     depends_on:
@@ -83,7 +83,7 @@ services:
     container_name: flower
     restart: always
     #command: celery -A core.celery_app -b "${CELERY_BROKER_URL}" flower --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
-    entrypoint: ["/wait-for-it.sh","${VALKEY_ENDPOINT}","--","/start_worker_flower.sh"]
+    entrypoint: ["/wait-for-it.sh","${REDIS_ENDPOINT}","--","/start_worker_flower.sh"]
     env_file: .env
     depends_on:
       - django
