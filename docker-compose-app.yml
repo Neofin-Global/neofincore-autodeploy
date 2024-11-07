@@ -5,43 +5,40 @@ services:
     image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
     container_name: django
     restart: always
+    entrypoint: ["/wait-for-it.sh","${DATABASE_ENDPOINT}","--","/start.sh"]
     volumes:
       - nginx_conf:/nginx
       - static:/staticfiles
       - media:/media
       - ./wait-for-it.sh:/wait-for-it.sh
       - locale:/project_translations/locale
-    entrypoint: ["/wait-for-it.sh","${DATABASE_ENDPOINT}","--","/start.sh"]
     networks:
       - nginx_network
     env_file: .env
 
   nginx:
-    #image: index.docker.io/phonxis/neofincore_nginx_master:${APPLICATION_VERSION:-latest}
     image: nginx:1.27.2
     container_name: nginx
     restart: always
-    expose:
-      - 80
-    ports:
-      - 80:80
     volumes:
       - ./nginx/default-http-app.conf:/etc/nginx/conf.d/default.conf
       - static:/static
       - media:/media
+    expose:
+      - 80
+    ports:
+      - 80:80
     depends_on:
       - django
     networks:
       - nginx_network
 
   celeryworker:
-    #image: index.docker.io/phonxis/neofincore_celeryworker_master:${APPLICATION_VERSION:-latest}
+    # Use the same image as django service
     image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
     container_name: celeryworker
-    #command: celery -A core.celery_app worker -l INFO
-    entrypoint: ["/wait-for-it.sh","${REDIS_ENDPOINT}","--","/start_worker_main.sh"]
-    env_file: .env
     restart: always
+    entrypoint: ["/wait-for-it.sh","${CACHE_ENDPOINT}","--","/start_worker_main.sh"]
     volumes:
       - media:/media
       - ./wait-for-it.sh:/wait-for-it.sh
@@ -49,15 +46,14 @@ services:
       - django
     networks:
       - nginx_network
+    env_file: .env
 
   celeryworker_low_priority:
-    #image: phonxis/neofincore_celeryworker_low_priority_master:${APPLICATION_VERSION:-latest}
+    # Use the same image as django service
     image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
     container_name: celeryworker_low_priority
-    #command: celery -A core.celery_app worker -l INFO -Q low_priority
-    entrypoint: ["/wait-for-it.sh","${REDIS_ENDPOINT}","--","/start_worker_lowpriority.sh"]
-    env_file: .env
     restart: always
+    entrypoint: ["/wait-for-it.sh","${CACHE_ENDPOINT}","--","/start_worker_lowpriority.sh"]
     volumes:
       - media:/media
       - ./wait-for-it.sh:/wait-for-it.sh
@@ -65,36 +61,35 @@ services:
       - django
     networks:
       - nginx_network
+    env_file: .env
 
   celerybeat:
-    #image: index.docker.io/phonxis/neofincore_celerybeat_master:${APPLICATION_VERSION:-latest}
+    # Use the same image as django service
     image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
     container_name: celerybeat
-    #command: celery -A core.celery_app beat -l INFO
-    entrypoint: ["/wait-for-it.sh","${REDIS_ENDPOINT}","--","/start_worker_beat.sh"]
-    env_file: .env
     restart: always
+    entrypoint: ["/wait-for-it.sh","${CACHE_ENDPOINT}","--","/start_worker_beat.sh"]
     volumes:
       - ./wait-for-it.sh:/wait-for-it.sh
     depends_on:
       - django
     networks:
       - nginx_network
+    env_file: .env
 
   flower:
-    #image: index.docker.io/phonxis/neofincore_flower_master:${APPLICATION_VERSION:-latest}
+    # Use the same image as django service
     image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
     container_name: flower
     restart: always
-    #command: celery -A core.celery_app -b "${CELERY_BROKER_URL}" flower --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
-    entrypoint: ["/wait-for-it.sh","${REDIS_ENDPOINT}","--","/start_worker_flower.sh"]
-    env_file: .env
+    entrypoint: ["/wait-for-it.sh","${CACHE_ENDPOINT}","--","/start_worker_flower.sh"]
     volumes:
       - ./wait-for-it.sh:/wait-for-it.sh
     depends_on:
       - django
     networks:
       - nginx_network
+    env_file: .env
 
 volumes:
   nginx_conf:
