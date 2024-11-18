@@ -13,8 +13,12 @@ export POSTGRES_HOST=$(docker exec postgresql sh -c "hostname -i" | awk '{print 
 
 domains_arr=$(python3 /var/site/neofincore-autodeploy/get_merchant_domains.py --domain ${PARENT_HOST} --db_host ${POSTGRES_HOST} --db_port ${POSTGRES_PORT} --db_name ${POSTGRES_DB} --db_user ${POSTGRES_USER} --db_pass ${POSTGRES_PASSWORD});
 
+if [[ "${PROJECT_ENVIRONMENT}" == "stage" ]]; then
+  COMPOSE_FILE="docker-compose.yml"
+else
+  COMPOSE_FILE="docker-compose-app.yml"
+fi
 # Check if local.docker-compose.yml exists, use it, otherwise fallback to docker-compose.yml
-COMPOSE_FILE="docker-compose.yml"
 if [ -f "/var/site/neofincore-autodeploy/local.docker-compose.yml" ]; then
   COMPOSE_FILE="local.docker-compose.yml"
 fi

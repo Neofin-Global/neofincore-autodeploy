@@ -16,8 +16,12 @@ echo "Autoupdate is enabled: ${AUTOUPDATE_ENABLED}";
 
 if [[ "${AUTOUPDATE_ENABLED}" == "True" ]]; then
 
+  if [[ "${PROJECT_ENVIRONMENT}" == "stage" ]]; then
+    COMPOSE_FILE="docker-compose.yml"
+  else
+    COMPOSE_FILE="docker-compose-app.yml"
+  fi
   # Check if local.docker-compose.yml exists, use it, otherwise fallback to docker-compose.yml
-  COMPOSE_FILE="docker-compose.yml"
   if [ -f "/var/site/neofincore-autodeploy/local.docker-compose.yml" ]; then
     COMPOSE_FILE="local.docker-compose.yml"
   fi
