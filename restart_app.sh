@@ -22,6 +22,6 @@ if [ -f "/var/site/neofincore-autodeploy/local.docker-compose.yml" ]; then
 fi
 
 # Stop containers
-docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" down
+docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" -- profile traefik down
 # Start containers
-docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" up -d
+docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile "${PROJECT_ENVIRONMENT}" --profile "${PROVIDER_NAME}" --profile traefik up -d
