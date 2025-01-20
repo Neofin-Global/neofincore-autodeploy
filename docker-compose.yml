@@ -1,114 +1,96 @@
-# the compose file for start up stage/production instances
+# compose file for running stage application or prod application with single instance
 version: '3.8'
-x-redash-service: &redash-service
-  image: redash/redash:8.0.0.b32245
-  depends_on:
-    - redash-postgres
-    - redash-redis
-  env_file: /opt/redash/env
-  restart: unless-stopped
-  profiles:
-      - production
+#x-redash-service: &redash-service
+#  image: redash/redash:8.0.0.b32245
+#  depends_on:
+#    - redash-postgres
+#    - redash-redis
+#  env_file: /opt/redash/env
+#  restart: unless-stopped
 
 services:
   django:
     image: index.docker.io/phonxis/neofincore_django_master:${APPLICATION_VERSION:-latest}
     container_name: django
     restart: always
-    volumes:
-      - nginx_conf:/nginx
-      - static:/staticfiles
-      - media:/media
-      # - ./init.sh:/init.sh
-      - ./wait-for-it.sh:/wait-for-it.sh
-      - locale:/project_translations/locale
+    env_file: .env
     entrypoint: ["/wait-for-it.sh","postgres:5432","--","/start.sh"]
-    networks:
-      - app_network
     depends_on:
       - postgres
     links:
       - postgres:postgres
-    env_file: .env
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
+    volumes:
+      - static:/staticfiles
+      - media:/media
+      - locale:/project_translations/locale
+      - ./wait-for-it.sh:/wait-for-it.sh
+    networks:
+      - app_network
 
   celeryworker:
     image: index.docker.io/phonxis/neofincore_celeryworker_master:${APPLICATION_VERSION:-latest}
     container_name: celeryworker
-    command: celery -A core.celery_app worker -l INFO
-    env_file: .env
     restart: always
-    volumes:
-      - media:/media
+    env_file: .env
+    command: celery -A core.celery_app worker -l INFO
     depends_on:
       - django
       - redis
+    volumes:
+      - media:/media
     networks:
       - app_network
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
   celeryworker_low_priority:
     image: phonxis/neofincore_celeryworker_low_priority_master:${APPLICATION_VERSION:-latest}
     container_name: celeryworker_low_priority
-    command: celery -A core.celery_app worker -l INFO -Q low_priority
-    env_file: .env
     restart: always
-    volumes:
-      - media:/media
+    env_file: .env
+    command: celery -A core.celery_app worker -l INFO -Q low_priority
     depends_on:
       - django
       - redis
+    volumes:
+      - media:/media
     networks:
       - app_network
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
   celerybeat:
     image: index.docker.io/phonxis/neofincore_celerybeat_master:${APPLICATION_VERSION:-latest}
     container_name: celerybeat
-    command: celery -A core.celery_app beat -l INFO
-    env_file: .env
     restart: always
+    env_file: .env
+    command: celery -A core.celery_app beat -l INFO
     depends_on:
       - django
       - redis
     networks:
       - app_network
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
   flower:
     image: index.docker.io/phonxis/neofincore_flower_master:${APPLICATION_VERSION:-latest}
     container_name: flower
     restart: always
-    command: celery -A core.celery_app -b "${CELERY_BROKER_URL}" flower --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
     env_file: .env
+    command: celery -A core.celery_app -b "${CELERY_BROKER_URL}" flower --basic_auth="${CELERY_FLOWER_USER}:${CELERY_FLOWER_PASSWORD}"
     depends_on:
       - django
       - redis
     networks:
       - app_network
-    # labels:
-    #   - "com.centurylinklabs.watchtower.enable=true"  # Auto-update by Watchtower
 
   nginx:
     image: index.docker.io/phonxis/neofincore_nginx_master:${APPLICATION_VERSION:-latest}
     container_name: nginx
     restart: always
-    volumes:
-      - ./nginx/default-traefik.conf:/etc/nginx/conf.d/default.conf
-      - static:/static
-      - media:/media
     depends_on:
       - django
+    volumes:
+      - static:/static
+      - media:/media
+      - ./nginx/default-traefik.conf:/etc/nginx/conf.d/default.conf
     networks:
       - app_network
-    profiles:
-      - traefik
-      - stage
-      - production
 
   traefik:
     image: index.docker.io/phonxis/neofincore_traefik_master:${APPLICATION_VERSION:-latest}
@@ -124,10 +106,6 @@ services:
       - '0.0.0.0:443:443'
     networks:
       - app_network
-    profiles:
-      - traefik
-      - stage
-      - production
 
   postgres:
     image: phonxis/neofincore_postgres_master:${APPLICATION_VERSION:-latest}
@@ -148,66 +126,6 @@ services:
     networks:
       - app_network
 
-  certbot-digitalocean-stage:
-    image: certbot/dns-digitalocean
-    container_name: certbot-digitalocean-stage
-    volumes:
-      - certbot-www:/var/www/certbot/:rw
-      - certbot-conf:/etc/letsencrypt/:rw
-      - ./digitalocean.ini:/digitalocean.ini
-    command: certonly --dns-digitalocean --dns-digitalocean-credentials /digitalocean.ini -d ${DOMAIN} -d '*.${DOMAIN}'  --email ${DOMAIN_OWNER_EMAIL} --agree-tos
-    env_file: .env
-    profiles:
-      - digitalocean
-
-  certbot-aws-stage:
-    image: certbot/dns-route53
-    container_name: certbot-aws-stage
-    volumes:
-      - certbot-www:/var/www/certbot/:rw
-      - certbot-conf:/etc/letsencrypt/:rw
-    command: certonly --dns-route53 --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}' --agree-tos
-    env_file: .env
-    profiles:
-      # - aws
-      - ec2
-
-  certbot-azure-stage:
-    image: phonxis/certbot-dns-azure
-    container_name: certbot-azure-stage
-    volumes:
-      - certbot-www:/var/www/certbot/:rw
-      - certbot-conf:/etc/letsencrypt/:rw
-      - ./dns_creds.ini:/dns_creds.ini
-    command: certbot certonly --authenticator dns-azure --preferred-challenges dns --noninteractive --agree-tos --dns-azure-config /dns_creds.ini --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}'
-    env_file: .env
-    profiles:
-      - azure
-
-  certbot-google-stage:
-   image: certbot/dns-google
-   container_name: certbot-google-stage
-   volumes:
-     - certbot-www:/var/www/certbot/:rw
-     - certbot-conf:/etc/letsencrypt/:rw
-     - ./google.json:/google.json
-   command: certonly --dns-google --agree-tos --dns-google-credentials /google.json --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}'
-   env_file: .env
-   profiles:
-     # - google
-     - gce
-
-  certbot-prod:
-    image: phonxis/neofincore_certbot_master:latest
-    container_name: certbot-prod
-    volumes:
-      - certbot-www:/var/www/certbot/:rw
-      - certbot-conf:/etc/letsencrypt/:rw
-    # command: certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d 'redash.${DOMAIN}' --agree-tos
-    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} --agree-tos
-    profiles:
-      - production
-
   zabbix-agent:
     image: phonxis/neofincore_zabbix_master:${APPLICATION_VERSION:-latest}
     container_name: zabbixagent
@@ -226,99 +144,88 @@ services:
     networks:
       - app_network
 
-  # watchtower:
-  #   container_name: watchtower
-  #   env_file: .env
-  #   image: containrrr/watchtower:1.4.0
-  #   volumes:
-  #     - /var/run/docker.sock:/var/run/docker.sock
-  #     - /root/.docker/config.json:/config.json
+  #redash-server:
+  #  <<: *redash-service
+  #  command: server
+  #  container_name: redash_server
+  #  restart: always
+  #  ports:
+  #    - "5000:5000"
+  #  environment:
+  #    REDASH_WEB_WORKERS: 4
+  #  networks:
+  #    - app_network
+  #  links:
+  #    - redash-redis:redis
+  #    - redash-postgres:postgres
+  #    - postgres:app-postgres
 
-  redash-server:
-    <<: *redash-service
-    command: server
-    container_name: redash_server
-    restart: always
-    ports:
-      - "5000:5000"
-    environment:
-      REDASH_WEB_WORKERS: 4
-    networks:
-      - app_network
-    links:
-      - redash-redis:redis
-      - redash-postgres:postgres
-      - postgres:app-postgres
+  #redash-scheduler:
+  #  <<: *redash-service
+  #  command: scheduler
+  #  container_name: redash_scheduler
+  #  environment:
+  #    QUEUES: "celery"
+  #    WORKERS_COUNT: 1
+  #  networks:
+  #    - app_network
+  #  links:
+  #    - redash-redis:redis
+  #    - redash-postgres:postgres
+  #    - postgres:app-postgres
 
-  redash-scheduler:
-    <<: *redash-service
-    command: scheduler
-    container_name: redash_scheduler
-    environment:
-      QUEUES: "celery"
-      WORKERS_COUNT: 1
-    networks:
-      - app_network
-    links:
-      - redash-redis:redis
-      - redash-postgres:postgres
-      - postgres:app-postgres
+  #redash-scheduled-worker:
+  #  <<: *redash-service
+  #  command: worker
+  #  container_name: redash_scheduled_worker
+  #  environment:
+  #    QUEUES: "scheduled_queries,schemas"
+  #    WORKERS_COUNT: 1
+  #  networks:
+  #    - app_network
+  #  links:
+  #    - redash-redis:redis
+  #    - redash-postgres:postgres
+  #    - postgres:app-postgres
 
-  redash-scheduled-worker:
-    <<: *redash-service
-    command: worker
-    container_name: redash_scheduled_worker
-    environment:
-      QUEUES: "scheduled_queries,schemas"
-      WORKERS_COUNT: 1
-    networks:
-      - app_network
-    links:
-      - redash-redis:redis
-      - redash-postgres:postgres
-      - postgres:app-postgres
+  #redash-adhoc-worker:
+  #  <<: *redash-service
+  #  command: worker
+  #  container_name: redash_adhoc_worker
+  #  environment:
+  #    QUEUES: "queries"
+  #    WORKERS_COUNT: 2
+  #  networks:
+  #    - app_network
+  #  links:
+  #    - redash-redis:redis
+  #    - redash-postgres:postgres
+  #    - postgres:app-postgres
 
-  redash-adhoc-worker:
-    <<: *redash-service
-    command: worker
-    container_name: redash_adhoc_worker
-    environment:
-      QUEUES: "queries"
-      WORKERS_COUNT: 2
-    networks:
-      - app_network
-    links:
-      - redash-redis:redis
-      - redash-postgres:postgres
-      - postgres:app-postgres
+  #redash-redis:
+  #  image: redis:5.0-alpine
+  #  container_name: redash_redis
+  #  networks:
+  #    - app_network
+  #  links:
+  #    - postgres:app-postgres
 
-  redash-redis:
-    image: redis:5.0-alpine
-    container_name: redash_redis
-    networks:
-      - app_network
-    links:
-      - postgres:app-postgres
-
-  redash-postgres:
-    image: postgres:9.6-alpine
-    env_file: /opt/redash/env
-    container_name: redash_postgres
-    volumes:
-      - /opt/redash/postgres-data:/var/lib/postgresql/data
-    networks:
-      - app_network
-    links:
-      - redash-redis:redis
-      - postgres:app-postgres
+  #redash-postgres:
+  #  image: postgres:9.6-alpine
+  #  env_file: /opt/redash/env
+  #  container_name: redash_postgres
+  #  volumes:
+  #    - /opt/redash/postgres-data:/var/lib/postgresql/data
+  #  networks:
+  #    - app_network
+  #  links:
+  #    - redash-redis:redis
+  #    - postgres:app-postgres
 
 volumes:
   postgres_data:
-  nginx_conf:
   static:
   media:
-  certbot-www:
-  certbot-conf:
   locale:
   traefik-acme:
 
