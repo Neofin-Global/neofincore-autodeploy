@@ -62,6 +62,17 @@ http:
       tls:
         certResolver: letsencrypt
 
+    # TODO: setup flower
+    #flower-router:
+    #  rule: 'Host(`flower.<project_domain>`)'
+    #  entryPoints:
+    #    - web-secure
+    #  middlewares:
+    #    - csrf
+    #  service: flower
+    #  tls:
+    #    certResolver: letsencrypt
+
     # TODO: setup redash
     #redash-router:
     #  rule: 'Host(`redash.<project_domain>`)'
@@ -101,6 +112,16 @@ http:
     #  loadBalancer:
     #    servers:
     #      - url: http://redash_server:5000
+
+    # TODO: setup flower
+    #flower:
+    #  loadBalancer:
+    #    servers:
+    #      - url: http://flower:5555
+
+# Disable Traefik dashboard
+api:
+  dashboard: false
 
 providers:
   # https://doc.traefik.io/traefik/master/providers/file/

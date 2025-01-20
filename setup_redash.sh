@@ -54,7 +54,7 @@ setup_compose() {
     # echo "export COMPOSE_FILE=/opt/redash/docker-compose.yml" >> ~/.profile
     # export COMPOSE_PROJECT_NAME=redash
     # export COMPOSE_FILE=/opt/redash/docker-compose.yml
-    sudo docker compose --profile production -f docker-compose.yml run --rm redash-server create_db
+    sudo docker compose -f docker-compose.yml run --rm redash-server create_db
     # sudo docker compose up -d
 }
 

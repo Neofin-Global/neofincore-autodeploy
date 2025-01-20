@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  certbot-digitalocean-stage:
+    image: certbot/dns-digitalocean
+    container_name: certbot-digitalocean-stage
+    volumes:
+      - certbot-www:/var/www/certbot/:rw
+      - certbot-conf:/etc/letsencrypt/:rw
+      - ./digitalocean.ini:/digitalocean.ini
+    command: certonly --dns-digitalocean --dns-digitalocean-credentials /digitalocean.ini -d ${DOMAIN} -d '*.${DOMAIN}'  --email ${DOMAIN_OWNER_EMAIL} --agree-tos
+    env_file: .env
+    profiles:
+      - digitalocean
+
+  certbot-aws-stage:
+    image: certbot/dns-route53
+    container_name: certbot-aws-stage
+    volumes:
+      - certbot-www:/var/www/certbot/:rw
+      - certbot-conf:/etc/letsencrypt/:rw
+    command: certonly --dns-route53 --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}' --agree-tos
+    env_file: .env
+    profiles:
+      # - aws
+      - ec2
+
+  certbot-azure-stage:
+    image: phonxis/certbot-dns-azure
+    container_name: certbot-azure-stage
+    volumes:
+      - certbot-www:/var/www/certbot/:rw
+      - certbot-conf:/etc/letsencrypt/:rw
+      - ./dns_creds.ini:/dns_creds.ini
+    command: certbot certonly --authenticator dns-azure --preferred-challenges dns --noninteractive --agree-tos --dns-azure-config /dns_creds.ini --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}'
+    env_file: .env
+    profiles:
+      - azure
+
+  certbot-google-stage:
+   image: certbot/dns-google
+   container_name: certbot-google-stage
+   volumes:
+     - certbot-www:/var/www/certbot/:rw
+     - certbot-conf:/etc/letsencrypt/:rw
+     - ./google.json:/google.json
+   command: certonly --dns-google --agree-tos --dns-google-credentials /google.json --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d '*.${DOMAIN}'
+   env_file: .env
+   profiles:
+     # - google
+     - gce
+
+  certbot-prod:
+    image: phonxis/neofincore_certbot_master:latest
+    container_name: certbot-prod
+    volumes:
+      - certbot-www:/var/www/certbot/:rw
+      - certbot-conf:/etc/letsencrypt/:rw
+    # command: certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} -d 'redash.${DOMAIN}' --agree-tos
+    command: certonly --webroot -w /var/www/certbot --force-renewal --email ${DOMAIN_OWNER_EMAIL} -d ${DOMAIN} --agree-tos
+    profiles:
+      - production
+
+volumes:
+  certbot-www:
+  certbot-conf:

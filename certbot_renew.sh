@@ -21,11 +21,7 @@ elif [[ "${PROVIDER_NAME}" == "gce" ]]; then
   CERTBOT_CONTAINER="certbot-google-stage";
 fi
 
-if [[ "${PROJECT_ENVIRONMENT}" == "stage" ]]; then
-  COMPOSE_FILE="docker-compose.yml"
-else
-  COMPOSE_FILE="docker-compose-app.yml"
-fi
+COMPOSE_FILE="docker-compose.yml"
 # Check if local.docker-compose.yml exists, use it, otherwise fallback to docker-compose.yml
 if [ -f "/var/site/neofincore-autodeploy/local.docker-compose.yml" ]; then
   COMPOSE_FILE="local.docker-compose.yml"
@@ -34,13 +30,13 @@ fi
 if [[ -n "$CERTBOT_CONTAINER" ]]; then
   if [[ "${PROJECT_ENVIRONMENT}" == "stage" ]]; then
     if [[ "${PROVIDER_NAME}" == "azure" ]]; then
-      docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile stage run ${CERTBOT_CONTAINER} certbot renew --quiet
+      docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" run ${CERTBOT_CONTAINER} certbot renew --quiet
     else
-      docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile stage run ${CERTBOT_CONTAINER} renew --quiet
+      docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" run ${CERTBOT_CONTAINER} renew --quiet
     fi
-    docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile stage --profile ${PROVIDER_NAME} restart nginx
+    docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" restart nginx
   else
-    docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile production run certbot-prod renew --quiet
-    docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" --profile production --profile ${PROVIDER_NAME} restart nginx-prod
+    docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" run certbot-prod renew --quiet
+    docker compose -f "/var/site/neofincore-autodeploy/$COMPOSE_FILE" restart nginx-prod
   fi
 fi
