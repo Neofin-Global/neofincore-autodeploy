@@ -1,3 +1,5 @@
+# Use this compose file to start up the application when the project consists with 2 and
+# more instances (servers) behind Load Balancer.
 version: '3.8'
 
 services:

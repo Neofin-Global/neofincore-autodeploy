@@ -1,3 +1,4 @@
+# the compose file with base nginx service for creating Let's encrypt TLS certificates
 version: '3.8'
 services:
   nginx_default:
